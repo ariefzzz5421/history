@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>History — 12,000 Years of Us</title>
+<meta name="description" content="An animated journey from 10,000 BC to today: the empires that ruled the world, the people who changed it, and the flags they marched under.">
+<meta name="theme-color" content="#07090f">
+<meta property="og:title" content="History — 12,000 Years of Us">
+<meta property="og:description" content="Scrub through 12,000 years. See who ruled the world at any moment, under which banner, and who was alive to see it.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="stars"></canvas>
+
+<nav id="nav">
+  <div class="brand"><i class="dot"></i>&nbsp;<b>History</b></div>
+  <div class="navlinks">
+    <a href="#machine">Time Machine</a>
+    <a href="#powers">Dominant Powers</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#figures">Figures</a>
+    <a href="#quiz">Quiz</a>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header id="hero">
+  <div class="wrap">
+    <p class="hero-kicker">10 000 BC &nbsp;→&nbsp; Right Now</p>
+    <h1>History</h1>
+    <p class="hero-sub">
+      Twelve thousand years of empires rising, banners changing hands, and a handful of
+      people who bent the whole story. Scrub the timeline, watch the world&rsquo;s
+      most dominant power change flags, and meet everyone who mattered.
+    </p>
+
+    <div class="counter" id="heroCounter">
+      <span id="heroYear">10 000 BC</span>
+      <small id="heroLabel">loading the past…</small>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat"><b id="s1">0</b><span>Years covered</span></div>
+      <div class="hstat"><b id="s2">0</b><span>Dominant powers</span></div>
+      <div class="hstat"><b id="s3">0</b><span>Key figures</span></div>
+      <div class="hstat"><b id="s4">0</b><span>Turning points</span></div>
+    </div>
+
+    <p class="scroll-hint">Scroll</p>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== TIME MACHINE ===================== -->
+<section id="machine">
+  <div class="wrap">
+    <p class="eyebrow reveal">01 — Time Machine</p>
+    <h2 class="title reveal">Drag through twelve millennia</h2>
+    <p class="lede reveal">
+      Pick any year between 10 000 BC and today. The banner, the ruling power, the size of
+      the known world and the people alive at that instant all update as you move.
+    </p>
+
+    <div class="machine-box reveal">
+      <div class="machine-top">
+        <div class="year-read"><span id="tmYear">1206</span><em id="tmEraName">Medieval</em></div>
+        <div class="era-chip" id="tmChip"><i></i><span>Medieval World</span></div>
+      </div>
+
+      <div class="slider-wrap">
+        <input type="range" id="tmSlider" min="0" max="1000" value="700" step="1" aria-label="Year selector">
+        <div class="ticks">
+          <span>10 000 BC</span><span>3000 BC</span><span>500 BC</span>
+          <span>500 AD</span><span>1500</span><span>1900</span><span>2026</span>
+        </div>
+      </div>
+
+      <div class="machine-grid">
+        <div class="flag-card">
+          <div id="tmFlag"></div>
+          <div class="fname" id="tmFlagName">—</div>
+          <div class="fnote">stylised banner</div>
+        </div>
+
+        <div>
+          <div class="power-name" id="tmPower">—</div>
+          <div class="power-sub" id="tmSeat">—</div>
+          <p class="power-fact" id="tmFact">—</p>
+
+          <div class="metrics">
+            <div class="metric"><b id="tmArea">—</b><span>Peak land area</span></div>
+            <div class="metric"><b id="tmShare">—</b><span>Share of humanity</span></div>
+            <div class="metric"><b id="tmPop">—</b><span>People on Earth</span></div>
+            <div class="metric"><b id="tmSpan">—</b><span>Reign length</span></div>
+          </div>
+
+          <div class="alive">
+            <h4>Alive in this year</h4>
+            <div class="alive-list" id="tmAlive"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== POWERS ===================== -->
+<section id="powers">
+  <div class="wrap">
+    <p class="eyebrow reveal">02 — Most Dominant Powers</p>
+    <h2 class="title reveal">Who actually ran the world</h2>
+    <p class="lede reveal">
+      Thirty-two powers, in the order they held the top spot. Measured two ways: by the land
+      they held, and by the slice of all living humans who answered to them.
+    </p>
+
+    <div class="toggle-row reveal">
+      <button class="tbtn on" data-metric="area">By land area</button>
+      <button class="tbtn" data-metric="popShare">By share of humanity</button>
+    </div>
+
+    <div class="race reveal" id="race"></div>
+
+    <p class="eyebrow reveal" style="margin-top:70px">The succession</p>
+    <h2 class="title reveal" style="font-size:clamp(1.5rem,3vw,2.2rem)">Every banner, in order</h2>
+    <div class="strip reveal"><div class="strip-inner" id="strip"></div></div>
+  </div>
+</section>
+
+<!-- ===================== TIMELINE ===================== -->
+<section id="timeline">
+  <div class="wrap">
+    <p class="eyebrow reveal">03 — Timeline</p>
+    <h2 class="title reveal">The turning points</h2>
+    <p class="lede reveal">
+      Sixty-five moments where the story visibly changed direction — from the first temple
+      to the first machine that could hold a conversation.
+    </p>
+
+    <div class="tl" id="tl"><div class="tl-line" id="tlLine"></div></div>
+  </div>
+</section>
+
+<!-- ===================== FIGURES ===================== -->
+<section id="figures">
+  <div class="wrap">
+    <p class="eyebrow reveal">04 — The People</p>
+    <h2 class="title reveal">Names worth knowing</h2>
+    <p class="lede reveal">
+      Portraits and biographies are pulled live from Wikipedia as you browse — so what
+      you read here is the real, current encyclopedia entry, not a copy. Tap anyone.
+    </p>
+
+    <div class="filters reveal" id="figFilters"></div>
+    <div class="grid-figs" id="figGrid"></div>
+    <button class="tbtn loadmore" id="loadMore">Show more people</button>
+  </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section id="quiz">
+  <div class="wrap">
+    <p class="eyebrow reveal">05 — For fun</p>
+    <h2 class="title reveal">How well do you know us?</h2>
+    <p class="lede reveal">Ten questions, drawn from everything above. No pressure.</p>
+
+    <div class="quiz-card reveal">
+      <div class="q-text" id="qText">—</div>
+      <div class="q-opts" id="qOpts"></div>
+      <div class="q-expl" id="qExpl"></div>
+      <div class="q-foot">
+        <span class="q-score" id="qScore">Question 1 / 10 · Score 0</span>
+        <button class="tbtn" id="qNext">Next question →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-note">
+      <b style="color:var(--ink)">History</b> — an animated tour from 10 000 BC to today.<br>
+      Dates and empire statistics follow standard scholarly compilations; ancient dates are
+      estimates. Biographies and portraits are fetched live from the
+      <a href="https://www.mediawiki.org/wiki/API:REST_API" target="_blank" rel="noopener">Wikipedia REST API</a>
+      and remain the property of their contributors (CC BY-SA).
+    </div>
+    <div style="font-family:var(--mono);font-size:.75rem">
+      <div>Land-area figures · Taagepera / standard empire tables</div>
+      <div>Population figures · McEvedy &amp; Jones, UN</div>
+      <div style="margin-top:10px;color:var(--ink-2)">Built to be read on anything.</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ===================== MODAL ===================== -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <div class="modal-head" id="modalHead"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
