@@ -91,10 +91,17 @@ nav{
   border-bottom:1px solid transparent; transition:border-color .3s;
 }
 nav.scrolled{ border-bottom-color:var(--line) }
-.brand{ display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:1.25rem; letter-spacing:.02em }
+.brand{ display:flex; align-items:center; gap:11px; font-family:var(--serif); font-size:1.25rem;
+        letter-spacing:.02em; text-decoration:none; color:inherit }
 .brand b{ color:var(--gold); font-weight:700 }
-.brand .dot{ width:9px; height:9px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold); animation:pulse 2.4s ease-in-out infinite }
-@keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1) } 50%{ opacity:.45; transform:scale(.75) } }
+.brand .logo{ width:34px; height:34px; display:block; flex:none }
+.brand .logo svg{ width:100%; height:100%; display:block; overflow:visible }
+.brand:hover .logo .lg-sand{ animation:sandflip 1.1s cubic-bezier(.6,0,.4,1) }
+@keyframes sandflip{ 50%{ transform:rotate(180deg) } 100%{ transform:rotate(180deg) } }
+.brand .logo .lg-sand{ transform-origin:32px 32px }
+.lg-now{ animation:pulse 2.4s ease-in-out infinite }
+@keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1) } 50%{ opacity:.4; transform:scale(.7) } }
+.lg-now{ transform-origin:center }
 
 .navlinks{ display:flex; gap:6px; flex-wrap:wrap }
 .navlinks a{
@@ -324,13 +331,26 @@ input[type=range]::-moz-range-thumb{
   aspect-ratio:1/1.12; background:linear-gradient(150deg,#151b26,#0b0f16); position:relative; overflow:hidden;
   display:grid; place-items:center;
 }
-.fig-img img{ width:100%; height:100%; object-fit:cover; object-position:center 22%; filter:grayscale(.35) contrast(1.05); transition:.55s; opacity:0 }
+/* generated portrait — always present, so a card is never empty */
+.fig-fallback{ position:absolute; inset:0; width:100%; height:100% }
+.fig-fallback svg{ width:100%; height:100%; display:block }
+/* real portrait fades in on top of the generated one once Wikipedia answers */
+.fig-img img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 18%;
+  filter:grayscale(.3) contrast(1.05); transition:opacity .6s ease, filter .5s, transform .5s; opacity:0;
+}
 .fig-img img.loaded{ opacity:1 }
-.fig:hover .fig-img img{ filter:none; transform:scale(1.07) }
-.fig-img .initials{ font-family:var(--serif); font-size:2.6rem; color:#2c3646; position:absolute }
-.fig-img::after{ content:''; position:absolute; inset:0; background:linear-gradient(transparent 45%, rgba(7,9,15,.92)) }
+.fig:hover .fig-img img.loaded{ filter:none; transform:scale(1.07) }
+.fig-img.loading::before{
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.07) 45%,transparent 70%);
+  background-size:220% 100%; animation:shimmer 1.5s linear infinite;
+}
+@keyframes shimmer{ to{ background-position:-220% 0 } }
+.fig-img::after{ content:''; position:absolute; inset:0; z-index:2;
+  background:linear-gradient(transparent 45%, rgba(7,9,15,.92)) }
 .fig-era{
-  position:absolute; top:10px; left:10px; z-index:2; font-family:var(--mono);
+  position:absolute; top:10px; left:10px; z-index:4; font-family:var(--mono);
   font-size:.6rem; letter-spacing:.12em; text-transform:uppercase;
   padding:4px 9px; border-radius:99px; background:rgba(7,9,15,.75); border:1px solid currentColor;
 }
@@ -365,6 +385,7 @@ input[type=range]::-moz-range-thumb{
 .modal-close:hover{ background:var(--rose); color:#fff; border-color:var(--rose); transform:rotate(90deg) }
 .modal-head{ display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap }
 .modal-head img{ width:118px; height:142px; object-fit:cover; border-radius:12px; border:1px solid var(--line) }
+.modal-head #mImg svg{ width:100%; height:100%; display:block }
 .modal-head h3{ font-family:var(--serif); font-size:clamp(1.5rem,3.4vw,2.1rem); line-height:1.15 }
 .modal-head .dates{ font-family:var(--mono); color:var(--gold); font-size:.85rem; margin-top:5px }
 .modal-head .role{ color:var(--ink-3); font-size:.85rem; margin-top:2px }
@@ -400,6 +421,45 @@ input[type=range]::-moz-range-thumb{
 .q-score{ font-family:var(--mono); color:var(--gold); font-size:.85rem }
 .q-expl{ margin-top:16px; color:var(--ink-2); font-size:.9rem; display:none }
 .q-expl.show{ display:block; animation:fade .4s }
+
+/* ============================================================
+   CERTIFICATE
+   ============================================================ */
+.cert-card{ width:min(880px,100%) }
+.cert-h{ font-family:var(--serif); font-size:clamp(1.4rem,3vw,2rem); margin-bottom:4px }
+.cert-p{ color:var(--ink-3); font-size:.9rem; margin-bottom:20px }
+
+.cert-field{ display:block; margin-bottom:18px }
+.cert-field span{ display:block; font-size:.68rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:8px }
+.cert-field input{
+  width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:11px;
+  padding:13px 16px; color:var(--ink); font-family:var(--sans); font-size:1rem; outline:none;
+  transition:border-color .25s;
+}
+.cert-field input:focus{ border-color:var(--gold); background:rgba(230,180,80,.06) }
+.cert-hint{ display:block; margin-top:8px; font-size:.76rem; color:var(--ink-3) }
+.cert-hint.warn{ color:var(--gold) }
+
+#certDownload:disabled{ opacity:.4; cursor:not-allowed; background:var(--panel-2);
+  color:var(--ink-3); border-color:var(--line); font-weight:400 }
+
+.cert-preview{
+  border-radius:12px; overflow:hidden; border:1px solid var(--line);
+  background:#0a0d14; line-height:0;
+}
+.cert-preview canvas{ width:100%; height:auto; display:block }
+
+.cert-actions{ display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin-top:20px; flex-wrap:wrap }
+.cert-id{ font-family:var(--mono); font-size:.68rem; color:var(--ink-3); letter-spacing:.06em }
+
+/* the unlock panel that replaces the quiz when you pass */
+.cert-unlock{ margin-top:20px; padding:20px; border:1px dashed var(--gold);
+  border-radius:14px; background:rgba(230,180,80,.06); animation:rise .5s cubic-bezier(.16,1,.3,1) }
+.cert-unlock h4{ font-family:var(--serif); font-size:1.2rem; color:var(--gold-2); margin-bottom:6px }
+.cert-unlock p{ color:var(--ink-2); font-size:.9rem; margin-bottom:15px }
+.cert-locked{ margin-top:18px; color:var(--ink-3); font-size:.87rem }
 
 /* ============================================================
    FOOTER
