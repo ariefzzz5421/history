@@ -27,6 +27,31 @@ function fmtPop(n) {
 }
 
 /* ------------------------------------------------------------------
+   LOGO — an hourglass inside a dashed timeline ring, with a "now" dot.
+   Time running, history circling, and the present marked on the rim.
+   ------------------------------------------------------------------ */
+const LOGO_SVG = `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="History">
+  <defs>
+    <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5d78e"/><stop offset="1" stop-color="#c9992e"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="28" fill="none" stroke="url(#lgGold)" stroke-width="2.4"
+          stroke-dasharray="3 7" stroke-linecap="round" opacity=".6"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="url(#lgGold)" stroke-width="2.4"/>
+  <g class="lg-sand">
+    <path d="M23 19h18l-9 13z" fill="url(#lgGold)"/>
+    <path d="M23 45h18l-9-13z" fill="url(#lgGold)" opacity=".5"/>
+    <path d="M22 19h20M22 45h20" stroke="url(#lgGold)" stroke-width="3.4" stroke-linecap="round"/>
+  </g>
+  <circle class="lg-now" cx="60" cy="32" r="3.6" fill="#4cc9f0"/>
+</svg>`;
+
+const logoMount = $('#logoMount');
+if (logoMount) logoMount.innerHTML = LOGO_SVG;
+
+/* ------------------------------------------------------------------
    Starfield — slow drifting particles behind everything
    ------------------------------------------------------------------ */
 (function starfield() {
@@ -474,21 +499,57 @@ function figuresFiltered() {
   return figFilter === 'all' ? HISTORY.figures : HISTORY.figures.filter(f => f.era === figFilter);
 }
 
+/* A drawn portrait for every figure, so a card is never blank: era-tinted glow,
+   concentric rings, a bust silhouette and the monogram. If Wikipedia answers,
+   the real photograph fades in on top of this; if it doesn't, this is the card. */
+function hashOf(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+
+function portraitSVG(f, era) {
+  const h = hashOf(f.n), uid = 'p' + (h % 99991), c = era.color, rot = (h % 40) - 20;
+  return `<svg viewBox="0 0 200 224" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="bg${uid}" x1="0" y1="0" x2=".45" y2="1">
+        <stop offset="0" stop-color="${c}" stop-opacity=".20"/>
+        <stop offset="1" stop-color="#070910" stop-opacity="1"/>
+      </linearGradient>
+      <radialGradient id="gl${uid}" cx=".5" cy=".33" r=".62">
+        <stop offset="0" stop-color="${c}" stop-opacity=".28"/>
+        <stop offset="1" stop-color="${c}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="200" height="224" fill="#0b0f16"/>
+    <rect width="200" height="224" fill="url(#bg${uid})"/>
+    <circle cx="100" cy="74" r="70" fill="url(#gl${uid})"/>
+    <g opacity=".2" stroke="${c}" fill="none" stroke-width="1" transform="rotate(${rot} 100 88)">
+      <circle cx="100" cy="88" r="44"/><circle cx="100" cy="88" r="59"/><circle cx="100" cy="88" r="76"/>
+    </g>
+    <g fill="#080c13" opacity=".5">
+      <circle cx="100" cy="82" r="31"/>
+      <path d="M50 170c0-29 22-48 50-48s50 19 50 48z"/>
+    </g>
+    <text x="100" y="84" text-anchor="middle" dominant-baseline="central"
+      font-family="Playfair Display, Georgia, serif" font-size="50" font-weight="700"
+      fill="${c}" opacity=".92">${initials(f.n)}</text>
+  </svg>`;
+}
+
 const imgIO = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (!e.isIntersecting) return;
     imgIO.unobserve(e.target);
     const holder = e.target;
     wikiSummary(holder.dataset.wiki).then(d => {
-      if (!d || !d.thumb) return;
+      holder.classList.remove('loading');
+      if (!d || !d.thumb) return;            // keep the drawn portrait
       const img = new Image();
       img.alt = holder.dataset.name;
-      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
       img.src = d.thumb;
       img.onload = () => { holder.appendChild(img); requestAnimationFrame(() => img.classList.add('loaded')); };
     });
   });
-}, { rootMargin: '260px' });
+}, { rootMargin: '500px' });
 
 function renderFigures() {
   const list = figuresFiltered().slice(0, figShown);
@@ -497,9 +558,9 @@ function renderFigures() {
   grid.innerHTML = list.map(f => {
     const era = HISTORY.eras.find(e => e.id === f.era);
     return `<article class="fig reveal" data-wiki="${f.wiki}">
-      <div class="fig-img" data-wiki="${f.wiki}" data-name="${f.n}">
+      <div class="fig-img loading" data-wiki="${f.wiki}" data-name="${f.n}">
+        <div class="fig-fallback">${portraitSVG(f, era)}</div>
         <span class="fig-era" style="color:${era.color}">${era.name}</span>
-        <span class="initials">${initials(f.n)}</span>
       </div>
       <div class="fig-meta">
         <h4>${f.n}</h4>
@@ -560,10 +621,8 @@ function openFigure(f) {
   const pw = TM.powerAt(mid);
 
   $('#modalHead').innerHTML = `
-    <div id="mImg" style="width:118px;height:142px;border-radius:12px;background:#151b26;
-         display:grid;place-items:center;font-family:var(--serif);font-size:2rem;color:#2c3646">
-      ${initials(f.n)}
-    </div>
+    <div id="mImg" style="width:118px;height:142px;border-radius:12px;overflow:hidden;
+         border:1px solid var(--line);line-height:0">${portraitSVG(f, era)}</div>
     <div style="flex:1;min-width:230px">
       <h3>${f.n}</h3>
       <div class="dates">${fmtYear(f.b)} – ${f.d === null ? 'present' : fmtYear(f.d)}</div>
@@ -621,6 +680,192 @@ function interpPop(y) {
 }
 
 /* ------------------------------------------------------------------
+   CERTIFICATE — drawn on a canvas so it downloads as a real image
+   ------------------------------------------------------------------ */
+const CERT_PASS = 7;
+const gradeFor = (s, t) => (s === t ? 'Perfect score' : s >= 9 ? 'Distinction' : 'Pass');
+
+const certModal = $('#certModal');
+const certCanvas = $('#certCanvas');
+const certNameInput = $('#certName');
+let certState = { score: 0, total: 10, id: '' };
+
+/* Canvas has no letter-spacing in every browser we care about — space it by hand. */
+function drawTracked(ctx, text, cx, y, spacing) {
+  const chars = [...text];
+  const w = chars.reduce((a, ch) => a + ctx.measureText(ch).width + spacing, -spacing);
+  let x = cx - w / 2;
+  for (const ch of chars) { ctx.fillText(ch, x, y); x += ctx.measureText(ch).width + spacing; }
+}
+
+function fitFont(ctx, text, maxW, startPx, family, weight) {
+  let px = startPx;
+  do { ctx.font = `${weight} ${px}px ${family}`; px -= 2; }
+  while (ctx.measureText(text).width > maxW && px > 28);
+  return ctx.font;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawLogoOn(ctx, cx, cy, r) {
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  g.addColorStop(0, '#f5d78e'); g.addColorStop(1, '#c9992e');
+  ctx.strokeStyle = g; ctx.fillStyle = g; ctx.lineCap = 'round';
+
+  ctx.save();
+  ctx.globalAlpha = .6; ctx.lineWidth = r * .085;
+  ctx.setLineDash([r * .1, r * .25]);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.284); ctx.stroke();
+  ctx.restore();
+
+  ctx.lineWidth = r * .085; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(cx, cy, r * .75, 0, 6.284); ctx.stroke();
+
+  const u = r / 32;                       // logo is authored on a 64-unit grid
+  ctx.beginPath();
+  ctx.moveTo(cx - 9 * u, cy - 13 * u); ctx.lineTo(cx + 9 * u, cy - 13 * u); ctx.lineTo(cx, cy); ctx.closePath();
+  ctx.fill();
+  ctx.save(); ctx.globalAlpha = .5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 9 * u, cy + 13 * u); ctx.lineTo(cx + 9 * u, cy + 13 * u); ctx.lineTo(cx, cy); ctx.closePath();
+  ctx.fill(); ctx.restore();
+
+  ctx.lineWidth = r * .12;
+  ctx.beginPath();
+  ctx.moveTo(cx - 10 * u, cy - 13 * u); ctx.lineTo(cx + 10 * u, cy - 13 * u);
+  ctx.moveTo(cx - 10 * u, cy + 13 * u); ctx.lineTo(cx + 10 * u, cy + 13 * u);
+  ctx.stroke();
+
+  ctx.fillStyle = '#4cc9f0';
+  ctx.beginPath(); ctx.arc(cx + r, cy, r * .13, 0, 6.284); ctx.fill();
+}
+
+function drawCertificate() {
+  const ctx = certCanvas.getContext('2d');
+  const W = certCanvas.width, H = certCanvas.height;
+  const name = (certNameInput.value || '').trim() || 'History Explorer';
+  const { score, total, id } = certState;
+  const SERIF = '"Playfair Display", Georgia, serif';
+  const SANS = '"Inter", system-ui, sans-serif';
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0e15'; ctx.fillRect(0, 0, W, H);
+
+  const glow = ctx.createRadialGradient(W / 2, H * .18, 0, W / 2, H * .18, W * .62);
+  glow.addColorStop(0, 'rgba(230,180,80,.13)');
+  glow.addColorStop(1, 'rgba(230,180,80,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = 'rgba(230,180,80,.85)'; ctx.lineWidth = 3;
+  roundRect(ctx, 44, 44, W - 88, H - 88, 10); ctx.stroke();
+  ctx.strokeStyle = 'rgba(230,180,80,.32)'; ctx.lineWidth = 1;
+  roundRect(ctx, 62, 62, W - 124, H - 124, 6); ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(230,180,80,.75)'; ctx.lineWidth = 3;
+  [[100, 100, 1, 1], [W - 100, 100, -1, 1], [100, H - 100, 1, -1], [W - 100, H - 100, -1, -1]]
+    .forEach(([x, y, sx, sy]) => {
+      ctx.beginPath();
+      ctx.moveTo(x, y + 40 * sy); ctx.lineTo(x, y); ctx.lineTo(x + 40 * sx, y);
+      ctx.stroke();
+    });
+
+  drawLogoOn(ctx, W / 2, 208, 58);
+
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#e6b450';
+  ctx.font = `500 25px ${SANS}`;
+  drawTracked(ctx, 'CERTIFICATE OF COMPLETION', W / 2, 344, 7);
+
+  ctx.strokeStyle = 'rgba(230,180,80,.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 110, 372); ctx.lineTo(W / 2 + 110, 372); ctx.stroke();
+
+  ctx.fillStyle = '#8b97a8'; ctx.font = `400 25px ${SANS}`; ctx.textAlign = 'center';
+  ctx.fillText('This certifies that', W / 2, 442);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = fitFont(ctx, name, W - 420, 86, SERIF, 700);
+  ctx.fillText(name, W / 2, 542);
+
+  ctx.strokeStyle = 'rgba(230,180,80,.45)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 320, 578); ctx.lineTo(W / 2 + 320, 578); ctx.stroke();
+
+  ctx.fillStyle = '#a5b0c2'; ctx.font = `400 26px ${SANS}`;
+  ctx.fillText('has journeyed through twelve thousand years of human history', W / 2, 646);
+  ctx.fillText(`and answered ${score} of ${total} questions correctly.`, W / 2, 690);
+
+  const grade = gradeFor(score, total);
+  ctx.font = `600 26px ${SANS}`;
+  const bw = ctx.measureText(grade).width + 88;
+  ctx.fillStyle = 'rgba(230,180,80,.12)';
+  roundRect(ctx, W / 2 - bw / 2, 742, bw, 68, 34); ctx.fill();
+  ctx.strokeStyle = '#e6b450'; ctx.lineWidth = 1.5;
+  roundRect(ctx, W / 2 - bw / 2, 742, bw, 68, 34); ctx.stroke();
+  ctx.fillStyle = '#f5d78e'; ctx.fillText(grade, W / 2, 786);
+
+  /* a little timeline running along the foot */
+  ctx.strokeStyle = 'rgba(230,180,80,.28)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(300, 892); ctx.lineTo(W - 300, 892); ctx.stroke();
+  for (let i = 0; i <= 10; i++) {
+    const x = 300 + (W - 600) * (i / 10);
+    ctx.fillStyle = i === 10 ? '#4cc9f0' : 'rgba(230,180,80,.55)';
+    ctx.beginPath(); ctx.arc(x, 892, i === 10 ? 6 : 3.5, 0, 6.284); ctx.fill();
+  }
+  ctx.fillStyle = '#6b7789'; ctx.font = `400 18px ${SANS}`;
+  ctx.textAlign = 'left'; ctx.fillText('10,000 BC', 288, 934);
+  ctx.textAlign = 'right'; ctx.fillText('TODAY', W - 288, 934);
+
+  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  ctx.fillStyle = '#6b7789'; ctx.font = `400 20px ${SANS}`;
+  /* keep clear of the corner ornaments, which occupy y 980–1020 */
+  ctx.textAlign = 'left'; ctx.fillText(`Issued ${date}`, 152, 994);
+  ctx.textAlign = 'right'; ctx.fillText(id, W - 152, 994);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#e6b450'; ctx.font = `600 20px ${SANS}`;
+  drawTracked(ctx, 'HISTORY', W / 2, 994, 6);
+  ctx.textAlign = 'left';
+}
+
+function openCertificate(score, total) {
+  const stamp = Date.now().toString(36).toUpperCase().slice(-4);
+  certState = {
+    score, total,
+    id: 'ID HIS-' + hashOf(score + '·' + total + '·' + new Date().toDateString())
+      .toString(36).toUpperCase().padStart(4, '0').slice(0, 4) + stamp
+  };
+  $('#certId').textContent = certState.id;
+  certModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(drawCertificate);
+}
+
+function closeCert() { certModal.classList.remove('open'); document.body.style.overflow = ''; }
+$('#certClose').addEventListener('click', closeCert);
+certModal.addEventListener('click', e => { if (e.target === certModal) closeCert(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && certModal.classList.contains('open')) closeCert(); });
+certNameInput.addEventListener('input', drawCertificate);
+
+$('#certDownload').addEventListener('click', () => {
+  const safe = ((certNameInput.value || '').trim() || 'history-explorer')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  certCanvas.toBlob(blob => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `history-certificate-${safe}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }, 'image/png');
+});
+
+/* ------------------------------------------------------------------
    QUIZ
    ------------------------------------------------------------------ */
 (function quiz() {
@@ -675,15 +920,41 @@ function interpPop(y) {
 
   const qT = $('#qText'), qO = $('#qOpts'), qE = $('#qExpl'), qS = $('#qScore'), qN = $('#qNext');
 
+  function reset() {
+    idx = 0; score = 0;
+    shuffled.sort(() => Math.random() - .5);
+    $$('.cert-unlock, .cert-locked').forEach(n => n.remove());
+    qN.textContent = 'Next question →';
+    show();
+  }
+
   function show() {
     if (idx >= shuffled.length) {
+      const total = shuffled.length;
       const verdict = score >= 9 ? 'Historian.' : score >= 7 ? 'Seriously well read.'
         : score >= 5 ? 'Solid.' : 'Plenty left to discover — scroll back up.';
-      qT.innerHTML = `You scored <span style="color:var(--gold)">${score} / ${shuffled.length}</span>. ${verdict}`;
+      qT.innerHTML = `You scored <span style="color:var(--gold)">${score} / ${total}</span>. ${verdict}`;
       qO.innerHTML = ''; qE.classList.remove('show');
       qS.textContent = 'Finished';
       qN.textContent = 'Play again ↻';
-      qN.onclick = () => location.reload();
+
+      $$('.cert-unlock, .cert-locked').forEach(n => n.remove());
+      const card = $('.quiz-card');
+      if (score >= CERT_PASS) {
+        const panel = document.createElement('div');
+        panel.className = 'cert-unlock';
+        panel.innerHTML = `<h4>🏆 Certificate unlocked — ${gradeFor(score, total)}</h4>
+          <p>You passed with ${score} out of ${total}. Put your name on it and keep it.</p>
+          <button class="tbtn on" id="certOpen">Get your certificate →</button>`;
+        card.appendChild(panel);
+        $('#certOpen').onclick = () => openCertificate(score, total);
+      } else {
+        const p = document.createElement('p');
+        p.className = 'cert-locked';
+        p.innerHTML = `You need <b style="color:var(--gold)">${CERT_PASS} of ${total}</b>
+          to earn a certificate — ${CERT_PASS - score} more. Have another go.`;
+        card.appendChild(p);
+      }
       return;
     }
     const q = shuffled[idx];
@@ -710,7 +981,10 @@ function interpPop(y) {
     qS.textContent = `Question ${idx + 1} / ${shuffled.length} · Score ${score}`;
   });
 
-  qN.addEventListener('click', () => { idx++; show(); });
+  qN.addEventListener('click', () => {
+    if (idx >= shuffled.length) reset();   /* the button is "Play again" on the end screen */
+    else { idx++; show(); }
+  });
   show();
 })();
 

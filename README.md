@@ -13,8 +13,33 @@ No build step, no dependencies, no framework. Open `index.html` and it runs.
 | **Time Machine** | Drag a slider across twelve millennia. The banner, ruling power, peak land area, share of humanity, world population and *who was alive that year* all update live. The scale is non-linear so recent centuries get the room they need. |
 | **Dominant Powers** | 31 powers ranked two ways — by land area and by share of all living humans. Animated bars, plus a scrollable strip of every banner in chronological order. Click any one to jump the Time Machine there. |
 | **Timeline** | 64 turning points grouped into 9 eras, with a scroll-driven glowing spine and reveal-on-scroll entries. |
-| **Figures** | 82 people from Imhotep to Tim Berners-Lee, filterable by era. Portraits and biographies are **fetched live from Wikipedia** as cards enter the viewport. |
-| **Quiz** | 10 questions drawn at random from a pool, with explanations. |
+| **Figures** | 82 people from Imhotep to Tim Berners-Lee, filterable by era. Every card carries a generated portrait immediately; the real Wikipedia photograph fades in on top once it loads. |
+| **Quiz** | 10 questions drawn at random from a pool, with explanations. Score 7+ and you unlock a downloadable certificate. |
+
+## Portraits
+
+Each card draws its own portrait as inline SVG — an era-tinted gradient, concentric
+rings, a bust silhouette and the figure's monogram — so a card is **never blank**, even
+before the network answers or if Wikipedia is unreachable entirely. When the live fetch
+succeeds, the real photograph cross-fades in over the drawn one. A shimmer marks the
+in-between state.
+
+## Certificate
+
+Finish the quiz with **7 or more correct** and a certificate unlocks, graded
+*Pass* (7–8), *Distinction* (9) or *Perfect score* (10). Type your name and it renders
+live, then downloads as a 1600×1120 PNG.
+
+It's painted directly onto a `<canvas>` — no screenshot library, no dependencies — so the
+downloaded file is a real image rather than a screenshot of the page. Long names shrink to
+fit automatically, and each certificate carries an issue date and a generated ID.
+
+## Logo
+
+An hourglass inside a dashed timeline ring, with a cyan dot marking *now* on the rim —
+time running, history circling, the present marked. It's inline SVG in the nav (the sand
+flips on hover), redrawn with canvas paths on the certificate, and reduced to a
+data-URI favicon.
 
 ## Real data, fetched live
 
