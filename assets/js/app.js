@@ -751,7 +751,8 @@ function drawLogoOn(ctx, cx, cy, r) {
 function drawCertificate() {
   const ctx = certCanvas.getContext('2d');
   const W = certCanvas.width, H = certCanvas.height;
-  const name = (certNameInput.value || '').trim() || 'History Explorer';
+  const typed = (certNameInput.value || '').trim();
+  const name = typed || 'Your name here';   /* shown greyed until they type */
   const { score, total, id } = certState;
   const SERIF = '"Playfair Display", Georgia, serif';
   const SANS = '"Inter", system-ui, sans-serif';
@@ -790,7 +791,7 @@ function drawCertificate() {
   ctx.fillStyle = '#8b97a8'; ctx.font = `400 25px ${SANS}`; ctx.textAlign = 'center';
   ctx.fillText('This certifies that', W / 2, 442);
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = typed ? '#ffffff' : 'rgba(230,180,80,.30)';
   ctx.font = fitFont(ctx, name, W - 420, 86, SERIF, 700);
   ctx.fillText(name, W / 2, 542);
 
@@ -840,20 +841,50 @@ function openCertificate(score, total) {
       .toString(36).toUpperCase().padStart(4, '0').slice(0, 4) + stamp
   };
   $('#certId').textContent = certState.id;
+
+  /* offer back whatever they used last time, ready to overwrite */
+  try {
+    const saved = localStorage.getItem('cert:name');
+    if (saved && !certNameInput.value) certNameInput.value = saved;
+  } catch (_) { /* private mode */ }
+
   certModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  syncCertUI();
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(drawCertificate);
+  setTimeout(() => { certNameInput.focus(); certNameInput.select(); }, 120);
+}
+
+/* The name is the point of the certificate — don't let it download unnamed. */
+function syncCertUI() {
+  const typed = certNameInput.value.trim();
+  const btn = $('#certDownload'), hint = $('#certHint');
+  btn.disabled = !typed;
+  btn.textContent = typed ? 'Download certificate (PNG)' : 'Enter your name to download';
+  hint.textContent = typed
+    ? 'The certificate updates as you type.'
+    : 'Type your name above — it will appear on the certificate.';
+  hint.classList.toggle('warn', !typed);
 }
 
 function closeCert() { certModal.classList.remove('open'); document.body.style.overflow = ''; }
 $('#certClose').addEventListener('click', closeCert);
 certModal.addEventListener('click', e => { if (e.target === certModal) closeCert(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && certModal.classList.contains('open')) closeCert(); });
-certNameInput.addEventListener('input', drawCertificate);
+certNameInput.addEventListener('input', () => {
+  syncCertUI();
+  drawCertificate();
+  try { localStorage.setItem('cert:name', certNameInput.value.trim()); } catch (_) {}
+});
+certNameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && certNameInput.value.trim()) { e.preventDefault(); $('#certDownload').click(); }
+});
 
 $('#certDownload').addEventListener('click', () => {
-  const safe = ((certNameInput.value || '').trim() || 'history-explorer')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  const typed = (certNameInput.value || '').trim();
+  if (!typed) { certNameInput.focus(); return; }
+  const safe = typed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+    || 'certificate';   /* names in non-Latin scripts strip to empty */
   certCanvas.toBlob(blob => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);

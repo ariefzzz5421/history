@@ -27,8 +27,12 @@ in-between state.
 ## Certificate
 
 Finish the quiz with **7 or more correct** and a certificate unlocks, graded
-*Pass* (7–8), *Distinction* (9) or *Perfect score* (10). Type your name and it renders
-live, then downloads as a 1600×1120 PNG.
+*Pass* (7–8), *Distinction* (9) or *Perfect score* (10).
+
+You put your **own name** on it: the field is focused the moment the dialog opens, the
+certificate redraws on every keystroke, and download stays disabled until you've typed
+something — no one gets an unnamed certificate. Enter downloads it, and the name is
+remembered for next time.
 
 It's painted directly onto a `<canvas>` — no screenshot library, no dependencies — so the
 downloaded file is a real image rather than a screenshot of the page. Long names shrink to

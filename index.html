@@ -213,7 +213,9 @@
 
     <label class="cert-field">
       <span>Name on certificate</span>
-      <input type="text" id="certName" maxlength="38" placeholder="Your name" autocomplete="name">
+      <input type="text" id="certName" maxlength="46" placeholder="Type your name here"
+             autocomplete="name" spellcheck="false">
+      <small class="cert-hint" id="certHint">The certificate updates as you type.</small>
     </label>
 
     <div class="cert-preview"><canvas id="certCanvas" width="1600" height="1120"></canvas></div>

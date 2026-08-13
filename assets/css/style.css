@@ -437,7 +437,12 @@ input[type=range]::-moz-range-thumb{
   padding:13px 16px; color:var(--ink); font-family:var(--sans); font-size:1rem; outline:none;
   transition:border-color .25s;
 }
-.cert-field input:focus{ border-color:var(--gold) }
+.cert-field input:focus{ border-color:var(--gold); background:rgba(230,180,80,.06) }
+.cert-hint{ display:block; margin-top:8px; font-size:.76rem; color:var(--ink-3) }
+.cert-hint.warn{ color:var(--gold) }
+
+#certDownload:disabled{ opacity:.4; cursor:not-allowed; background:var(--panel-2);
+  color:var(--ink-3); border-color:var(--line); font-weight:400 }
 
 .cert-preview{
   border-radius:12px; overflow:hidden; border:1px solid var(--line);
